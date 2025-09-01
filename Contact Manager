@@ -1,0 +1,174 @@
+import java.io.*;
+import java.util.*;
+
+class Contact implements Serializable {
+    String name;
+    String phone;
+    String email;
+
+    Contact(String name, String phone, String email) {
+        this.name = name;
+        this.phone = phone;
+        this.email = email;
+    }
+
+    @Override
+    public String toString() {
+        return "Name: " + name + ", Phone: " + phone + ", Email: " + email;
+    }
+}
+
+public class ContactManager {
+    static Scanner sc = new Scanner(System.in);
+    static List<Contact> contacts = new ArrayList<>();
+    static final String FILE_NAME = "contacts.dat";
+
+    public static void main(String[] args) {
+        loadContacts();
+
+        int choice;
+        do {
+            System.out.println("\n=== Contact Management System ===");
+            System.out.println("1. Add Contact");
+            System.out.println("2. View Contacts");
+            System.out.println("3. Edit Contact");
+            System.out.println("4. Delete Contact");
+            System.out.println("5. Exit");
+            System.out.print("Enter your choice: ");
+            choice = sc.nextInt();
+            sc.nextLine(); // consume newline
+
+            switch (choice) {
+                case 1 -> addContact();
+                case 2 -> viewContacts();
+                case 3 -> editContact();
+                case 4 -> deleteContact();
+                case 5 -> saveContacts();
+                default -> System.out.println("Invalid choice!");
+            }
+        } while (choice != 5);
+
+        System.out.println("👋 Exiting... Contacts saved!");
+    }
+
+    // Add new contact with validation
+    static void addContact() {
+        String name, phone, email;
+
+        // Validate Name
+        while (true) {
+            System.out.print("Enter name (only alphabets): ");
+            name = sc.nextLine();
+            if (name.matches("^[a-zA-Z ]+$")) break;
+            else System.out.println("❌ Invalid name! Use only letters and spaces.");
+        }
+
+        // Validate Phone
+        while (true) {
+            System.out.print("Enter phone (10 digits): ");
+            phone = sc.nextLine();
+            if (phone.matches("^[0-9]{10}$")) break;
+            else System.out.println("❌ Invalid phone! Must be 10 digits.");
+        }
+
+        // Validate Email
+        while (true) {
+            System.out.print("Enter email (must be Gmail/Yahoo/Outlook): ");
+            email = sc.nextLine();
+            if (email.matches("^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook)\\.com$")) break;
+            else System.out.println("❌ Invalid email! Must be @gmail.com, @yahoo.com, or @outlook.com.");
+        }
+
+        contacts.add(new Contact(name, phone, email));
+        System.out.println("✅ Contact added successfully!");
+    }
+
+    // View contacts
+    static void viewContacts() {
+        if (contacts.isEmpty()) {
+            System.out.println("No contacts found!");
+        } else {
+            System.out.println("\n--- Contact List ---");
+            for (int i = 0; i < contacts.size(); i++) {
+                System.out.println((i + 1) + ". " + contacts.get(i));
+            }
+        }
+    }
+
+    // Edit a contact with validation
+    static void editContact() {
+        viewContacts();
+        if (contacts.isEmpty()) return;
+
+        System.out.print("Enter the contact number to edit: ");
+        int index = sc.nextInt() - 1;
+        sc.nextLine();
+
+        if (index >= 0 && index < contacts.size()) {
+            Contact c = contacts.get(index);
+
+            // Edit Name
+            System.out.print("Enter new name (" + c.name + "): ");
+            String name = sc.nextLine();
+            if (!name.isEmpty()) {
+                if (name.matches("^[a-zA-Z ]+$")) c.name = name;
+                else System.out.println("❌ Invalid name! Keeping old value.");
+            }
+
+            // Edit Phone
+            System.out.print("Enter new phone (" + c.phone + "): ");
+            String phone = sc.nextLine();
+            if (!phone.isEmpty()) {
+                if (phone.matches("^[0-9]{10}$")) c.phone = phone;
+                else System.out.println("❌ Invalid phone! Keeping old value.");
+            }
+
+            // Edit Email
+            System.out.print("Enter new email (" + c.email + "): ");
+            String email = sc.nextLine();
+            if (!email.isEmpty()) {
+                if (email.matches("^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook)\\.com$")) c.email = email;
+                else System.out.println("❌ Invalid email! Keeping old value.");
+            }
+
+            System.out.println("✅ Contact updated successfully!");
+        } else {
+            System.out.println("Invalid contact number!");
+        }
+    }
+
+    // Delete a contact
+    static void deleteContact() {
+        viewContacts();
+        if (contacts.isEmpty()) return;
+
+        System.out.print("Enter the contact number to delete: ");
+        int index = sc.nextInt() - 1;
+        sc.nextLine();
+
+        if (index >= 0 && index < contacts.size()) {
+            contacts.remove(index);
+            System.out.println("🗑 Contact deleted successfully!");
+        } else {
+            System.out.println("Invalid contact number!");
+        }
+    }
+
+    // Save contacts to file
+    static void saveContacts() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(contacts);
+        } catch (IOException e) {
+            System.out.println("Error saving contacts: " + e.getMessage());
+        }
+    }
+
+    // Load contacts from file
+    static void loadContacts() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            contacts = (List<Contact>) ois.readObject();
+        } catch (Exception e) {
+            contacts = new ArrayList<>(); // start fresh if no file
+        }
+    }
+}
